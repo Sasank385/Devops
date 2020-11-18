@@ -1,0 +1,113 @@
+provider "aws" {
+  version = "~> 3.0"
+  region = "us-east-1"
+}
+
+# Create a VPC
+
+
+resource "aws_vpc" "vpc1" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "vpc1"
+  }
+}
+
+
+resource "aws_subnet" "publicsubnet" {
+  vpc_id     = aws_vpc.vpc1.id
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch  = true
+
+  tags = {
+    Name = "publicsubnet"
+  }
+}
+
+
+resource "aws_subnet" "privatesubnet" {
+  vpc_id     = aws_vpc.vpc1.id
+  cidr_block = "10.0.2.0/24"
+
+  tags = {
+    Name = "privatesubnet"
+  }
+}
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc1.id
+
+  tags = {
+    Name = "igw"
+  }
+}
+
+resource "aws_route_table" "Publicrt" {
+  vpc_id = aws_vpc.vpc1.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+    tags = {
+      Name = "publicrt"
+    }
+
+}
+
+resource "aws_route_table" "Privatert" {
+  vpc_id = aws_vpc.vpc1.id
+ 
+    tags = {
+      Name = "privatert"
+    }
+ route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.natgw.id
+  }
+ }   
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.publicsubnet.id
+  route_table_id = aws_route_table.Publicrt.id
+}
+
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.privatesubnet.id
+  route_table_id = aws_route_table.Privatert.id
+}
+
+resource "aws_eip" "nateip" {
+  vpc      = true
+}
+
+resource "aws_nat_gateway" "natgw" {
+  allocation_id = aws_eip.nateip.id
+  subnet_id     = aws_subnet.publicsubnet.id
+
+  tags = {
+    Name = "natgw"
+  }
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-0947d2ba12ee1ff75"
+  instance_type = "t3.micro"
+   subnet_id     = aws_subnet.publicsubnet.id
+
+  tags = {
+    Name = "web"
+  }
+}
+
+resource "aws_instance" "db" {
+  ami           = "ami-0947d2ba12ee1ff75"
+  instance_type = "t3.micro"
+  subnet_id      = aws_subnet.privatesubnet.id
+  tags = {
+    Name = "db"
+  }
+}
