@@ -1,0 +1,28 @@
+1.we have to install azure cli in our system 
+2.To install cli you can go to https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt
+3.After going to the site install cli based upon your operating system(os)
+4.for ubuntu follow the given steps 
+5.open terminal run the commands as given below
+
+    a)Get packages needed for the install process:
+
+        . sudo apt-get update
+        . sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg
+
+    b)Download and install the Microsoft signing key:
+
+         . curl -sL https://packages.microsoft.com/keys/microsoft.asc |
+                gpg --dearmor |
+                sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+
+     c)Add the Azure CLI software repository:
+
+          . AZ_REPO=$(lsb_release -cs)
+            echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" 
+                    sudo tee /etc/apt/sources.list.d/azure-cli.list
+
+     d)Update repository information and install the azure-cli package:
+
+            . sudo apt-get update
+            . sudo apt-get install azure-cli
+
